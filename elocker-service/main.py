@@ -19,6 +19,10 @@ _service = DocumentService()
 # ------------------------------------------------------------------ #
 # GET /api/documents – list all documents                             #
 # ------------------------------------------------------------------ #
+@app.get("/")  
+def read_root():
+    return {"message": "LankaOne Elocker Service is Running!"}
+
 @app.get(
     "/api/documents",
     response_model=List[Document],

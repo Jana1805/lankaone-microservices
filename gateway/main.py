@@ -15,9 +15,9 @@ app = FastAPI(title="LankaOne – API Gateway", version="1.0.0")
 # Services
 # -------------------------
 SERVICES = {
-    "identity":  "http://localhost:8081",
-    "elocker":   "http://localhost:8082",
-    # "govpay":      "http://localhost:8083",  # uncomment when Member 3 is ready
+    "identity":    "http://localhost:8081",
+    "elocker":     "http://localhost:8082",
+    "govpay":      "http://localhost:8083",
     # "beneficiary": "http://localhost:8084",  # uncomment when Member 4 is ready
 }
 
@@ -139,6 +139,35 @@ async def update_document(doc_id: int, request: Request):
 @app.delete("/gateway/documents/{doc_id}", dependencies=[Depends(security)])
 async def delete_document(doc_id: int):
     return await forward_request("elocker", f"/api/documents/{doc_id}", "DELETE")
+
+# -------------------------
+# GovPay Routes (Member 3)
+# -------------------------
+@app.get("/gateway/payments", dependencies=[Depends(security)])
+async def get_all_payments():
+    return await forward_request("govpay", "/api/payments", "GET")
+
+@app.get("/gateway/payments/history/{citizen_id}", dependencies=[Depends(security)])
+async def get_payment_history(citizen_id: str):
+    return await forward_request("govpay", f"/api/payments/history/{citizen_id}", "GET")
+
+@app.get("/gateway/payments/{payment_id}", dependencies=[Depends(security)])
+async def get_payment(payment_id: str):
+    return await forward_request("govpay", f"/api/payments/{payment_id}", "GET")
+
+@app.post("/gateway/payments/create", dependencies=[Depends(security)])
+async def create_payment(request: Request):
+    body = await request.json()
+    return await forward_request("govpay", "/api/payments/create", "POST", json=body)
+
+@app.post("/gateway/payments/refund", dependencies=[Depends(security)])
+async def refund_payment(request: Request):
+    body = await request.json()
+    return await forward_request("govpay", "/api/payments/refund", "POST", json=body)
+
+@app.delete("/gateway/payments/{payment_id}", dependencies=[Depends(security)])
+async def delete_payment(payment_id: str):
+    return await forward_request("govpay", f"/api/payments/{payment_id}", "DELETE")
 
 # -------------------------
 # Error handler
