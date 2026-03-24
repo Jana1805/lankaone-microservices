@@ -15,8 +15,8 @@ app = FastAPI(title="LankaOne – API Gateway", version="1.0.0")
 # Services
 # -------------------------
 SERVICES = {
-    "identity": "http://localhost:8081",
-    # "elocker":     "http://localhost:8082",  # uncomment when Member 2 is ready
+    "identity":  "http://localhost:8081",
+    "elocker":   "http://localhost:8082",
     # "govpay":      "http://localhost:8083",  # uncomment when Member 3 is ready
     # "beneficiary": "http://localhost:8084",  # uncomment when Member 4 is ready
 }
@@ -83,7 +83,7 @@ def read_root():
     }
 
 # -------------------------
-# Identity Routes
+# Identity Routes (Member 1)
 # -------------------------
 @app.get("/gateway/identities", dependencies=[Depends(security)])
 async def get_all_identities():
@@ -110,6 +110,35 @@ async def update_identity(identity_id: int, request: Request):
 @app.delete("/gateway/identities/{identity_id}", dependencies=[Depends(security)])
 async def delete_identity(identity_id: int):
     return await forward_request("identity", f"/api/identities/{identity_id}", "DELETE")
+
+# -------------------------
+# E-Locker Routes (Member 2)
+# -------------------------
+@app.get("/gateway/documents", dependencies=[Depends(security)])
+async def get_all_documents():
+    return await forward_request("elocker", "/api/documents", "GET")
+
+@app.get("/gateway/documents/{citizen_id}", dependencies=[Depends(security)])
+async def get_documents_by_citizen(citizen_id: str):
+    return await forward_request("elocker", f"/api/documents/{citizen_id}", "GET")
+
+@app.get("/gateway/documents/{citizen_id}/{doc_id}", dependencies=[Depends(security)])
+async def get_document(citizen_id: str, doc_id: int):
+    return await forward_request("elocker", f"/api/documents/{citizen_id}/{doc_id}", "GET")
+
+@app.post("/gateway/documents/upload", dependencies=[Depends(security)])
+async def upload_document(request: Request):
+    body = await request.json()
+    return await forward_request("elocker", "/api/documents/upload", "POST", json=body)
+
+@app.put("/gateway/documents/{doc_id}", dependencies=[Depends(security)])
+async def update_document(doc_id: int, request: Request):
+    body = await request.json()
+    return await forward_request("elocker", f"/api/documents/{doc_id}", "PUT", json=body)
+
+@app.delete("/gateway/documents/{doc_id}", dependencies=[Depends(security)])
+async def delete_document(doc_id: int):
+    return await forward_request("elocker", f"/api/documents/{doc_id}", "DELETE")
 
 # -------------------------
 # Error handler
