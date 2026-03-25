@@ -5,6 +5,10 @@ import httpx
 from typing import Any
 from auth import verify_token, create_access_token
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+#member 4
+from pydantic import BaseModel
+from typing import Optional
+from enum import Enum
 
 # Security dependency for Swagger
 security = HTTPBearer()
@@ -18,7 +22,7 @@ SERVICES = {
     "identity":    "http://localhost:8081",
     "elocker":     "http://localhost:8082",
     "govpay":      "http://localhost:8083",
-    # "beneficiary": "http://localhost:8084",  # uncomment when Member 4 is ready
+    "beneficiary": "http://localhost:8084",
 }
 
 # -------------------------
@@ -178,3 +182,59 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"error": exc.detail, "path": str(request.url)}
     )
+
+# -------------------------
+# Beneficiary Routes (Member 4)
+class ProgramEnum(str, Enum):
+    ASWESUMA = "Aswesuma"
+    SAMURDHI = "Samurdhi"
+    ELDERLY_SUPPORT = "Elderly Support"
+
+
+class IncomeLevelEnum(str, Enum):
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+
+
+class BeneficiaryCreateGateway(BaseModel):
+    citizen_id: str
+    program: ProgramEnum
+    income_level: IncomeLevelEnum
+
+
+class BeneficiaryUpdateGateway(BaseModel):
+    program: Optional[ProgramEnum] = None
+    income_level: Optional[IncomeLevelEnum] = None
+
+
+# -------------------------
+@app.get("/gateway/beneficiary/list", dependencies=[Depends(security)])
+async def get_all_beneficiaries():
+    return await forward_request("beneficiary", "/api/beneficiary/list", "GET")
+
+@app.get("/gateway/beneficiary/{citizen_id}", dependencies=[Depends(security)])
+async def get_beneficiary_by_citizen_id(citizen_id: str):
+    return await forward_request("beneficiary", f"/api/beneficiary/{citizen_id}", "GET")
+
+@app.post("/gateway/beneficiary/apply", dependencies=[Depends(security)])
+async def apply_for_beneficiary(beneficiary_data: BeneficiaryCreateGateway):
+    return await forward_request(
+        "beneficiary",
+        "/api/beneficiary/apply",
+        "POST",
+        json=beneficiary_data.model_dump()
+    )
+
+@app.put("/gateway/beneficiary/{citizen_id}", dependencies=[Depends(security)])
+async def update_beneficiary(citizen_id: str, beneficiary_data: BeneficiaryUpdateGateway):
+    return await forward_request(
+        "beneficiary",
+        f"/api/beneficiary/{citizen_id}",
+        "PUT",
+        json=beneficiary_data.model_dump(exclude_none=True)
+    )
+
+@app.delete("/gateway/beneficiary/{id}", dependencies=[Depends(security)])
+async def delete_beneficiary(id: int):
+    return await forward_request("beneficiary", f"/api/beneficiary/{id}", "DELETE")
