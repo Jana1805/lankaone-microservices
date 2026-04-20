@@ -3,7 +3,7 @@ from model import Document, DocumentCreate, DocumentUpdate
 
 
 class DocumentMockDataService:
-    """In-memory mock data store for documents with full CRUD operations."""
+    """In-memory mock data store for documents with full CRUD operations."""     
 
     def __init__(self):
         self._documents: List[Document] = [
@@ -32,7 +32,7 @@ class DocumentMockDataService:
         self._next_id: int = 4
 
     # ------------------------------------------------------------------ #
-    # Read operations                                                       #
+    # Read operations                                                    #
     # ------------------------------------------------------------------ #
 
     def get_all(self) -> List[Document]:
@@ -88,4 +88,4 @@ class DocumentMockDataService:
             if doc.id == doc_id:
                 self._documents.pop(index)
                 return True
-        return False
+        return False   

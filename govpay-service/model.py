@@ -14,12 +14,16 @@ class PaymentCreate(BaseModel):
     amount: float
     method: str
 
+#citizen id validation
+
     @field_validator("citizen_id")
     @classmethod
     def citizen_id_not_empty(cls, v):
         if not v or not v.strip():
             raise ValueError("citizen_id must not be empty")
         return v.strip()
+
+#only predefined payment types, methods and status are allowed
 
     @field_validator("payment_type")
     @classmethod
@@ -34,6 +38,8 @@ class PaymentCreate(BaseModel):
         if v <= 0:
             raise ValueError("amount must be greater than 0")
         return v
+
+#success,pending,falled,refunded
 
     @field_validator("method")
     @classmethod
